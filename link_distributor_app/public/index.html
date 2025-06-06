@@ -17,14 +17,14 @@
   <button onclick="generateLinks()">Tạo 10 Link</button>
   <ul id="linkList"></ul>
 
-  <script>
+ <script>
   function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    alert("Đã sao chép: " + text);
-  }).catch(err => {
-    alert("Lỗi sao chép: " + err);
-  });
-}
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Đã sao chép: " + text);
+    }).catch(err => {
+      alert("Lỗi sao chép: " + err);
+    });
+  }
 
   async function generateLinks() {
     const fbUrl = document.getElementById("fbUrl").value.trim();
@@ -36,7 +36,7 @@
     const res = await fetch("/api/generate-links", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: fbUrl })  // ✅ Gửi đúng key backend yêu cầu
+      body: JSON.stringify({ url: fbUrl })
     });
 
     const data = await res.json();
@@ -44,16 +44,14 @@
     list.innerHTML = "";
 
     if (data.links) {
-  data.links.forEach(link => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <a href="${link}" target="_blank">${link}</a>
-      <button onclick="copyToClipboard('${link}')">📋 Sao chép</button>
-    `;
-    list.appendChild(li);
-  });
-}
-
+      data.links.forEach(link => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <a href="${link}" target="_blank">${link}</a>
+          <button onclick="copyToClipboard('${link}')">📋 Sao chép</button>
+        `;
+        list.appendChild(li);
+      });
     } else {
       alert("Lỗi: " + (data.error || "Không rõ lỗi"));
     }
