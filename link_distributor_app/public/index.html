@@ -18,6 +18,14 @@
   <ul id="linkList"></ul>
 
   <script>
+    function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert("Đã sao chép: " + text);
+  }).catch(err => {
+    alert("Lỗi sao chép: " + err);
+  });
+}
+
   async function generateLinks() {
     const fbUrl = document.getElementById("fbUrl").value.trim();
 
@@ -36,11 +44,16 @@
     list.innerHTML = "";
 
     if (data.links) {
-      data.links.forEach(link => {
-        const li = document.createElement("li");
-        li.innerHTML = `<a href="${link}" target="_blank">${link}</a>`;
-        list.appendChild(li);
-      });
+  data.links.forEach(link => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <a href="${link}" target="_blank">${link}</a>
+      <button onclick="copyToClipboard('${link}')">📋 Sao chép</button>
+    `;
+    list.appendChild(li);
+  });
+}
+
     } else {
       alert("Lỗi: " + (data.error || "Không rõ lỗi"));
     }
