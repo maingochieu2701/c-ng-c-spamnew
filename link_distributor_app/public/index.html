@@ -18,37 +18,34 @@
   <ul id="linkList"></ul>
 
   <script>
-    function extractCommentId(fbUrl) {
-      const match = fbUrl.match(/comment_id=(\\d+)/);
-      return match ? match[1] : null;
+  async function generateLinks() {
+    const fbUrl = document.getElementById("fbUrl").value.trim();
+
+    if (!fbUrl.includes("comment_id=")) {
+      return alert("URL không hợp lệ hoặc thiếu comment_id");
     }
 
-    async function generateLinks() {
-      const fbUrl = document.getElementById("fbUrl").value.trim();
-      const commentId = extractCommentId(fbUrl);
+    const res = await fetch("/api/generate-links", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: fbUrl })  // ✅ Gửi đúng key backend yêu cầu
+    });
 
-      if (!commentId) return alert("URL không hợp lệ hoặc thiếu comment_id");
+    const data = await res.json();
+    const list = document.getElementById("linkList");
+    list.innerHTML = "";
 
-      const res = await fetch("/api/generate-links", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commentId })
+    if (data.links) {
+      data.links.forEach(link => {
+        const li = document.createElement("li");
+        li.innerHTML = `<a href="${link}" target="_blank">${link}</a>`;
+        list.appendChild(li);
       });
-
-      const data = await res.json();
-      const list = document.getElementById("linkList");
-      list.innerHTML = "";
-
-      if (data.links) {
-        data.links.forEach(link => {
-          const li = document.createElement("li");
-          li.innerHTML = `<a href="${link}" target="_blank">${link}</a>`;
-          list.appendChild(li);
-        });
-      } else {
-        alert("Lỗi: " + (data.error || "Không rõ lỗi"));
-      }
+    } else {
+      alert("Lỗi: " + (data.error || "Không rõ lỗi"));
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
