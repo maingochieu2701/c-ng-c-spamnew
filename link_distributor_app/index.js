@@ -31,18 +31,31 @@ function isBot(ua) {
 }
 
 // API tạo link từ comment
+// API tạo link từ URL Facebook chứa comment_id
 app.post('/api/generate-links', (req, res) => {
-  const { commentId } = req.body;
-  if (!commentId) return res.status(400).json({ error: 'Thiếu commentId' });
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: 'Thiếu URL Facebook' });
 
-  const indexes = assignLinksForComment(commentId);
-  const shortLinks = indexes.map(i => {
-    const shortId = `l${commentId}_${i}`;
-    return `http://localhost:${PORT}/l/${shortId}`;
-  });
+  try {
+    const parsed = new URL(url);
+    const commentId = parsed.searchParams.get('comment_id');
 
-  res.json({ links: shortLinks });
+    if (!commentId) {
+      return res.status(400).json({ error: 'URL không hợp lệ hoặc thiếu comment_id' });
+    }
+
+    const indexes = assignLinksForComment(commentId);
+    const shortLinks = indexes.map(i => {
+      const shortId = `l${commentId}_${i}`;
+      return `http://localhost:${PORT}/l/${shortId}`;
+    });
+
+    res.json({ links: shortLinks });
+  } catch (err) {
+    return res.status(400).json({ error: 'URL không hợp lệ' });
+  }
 });
+
 
 // Route redirect
 app.get('/l/:id', (req, res) => {
