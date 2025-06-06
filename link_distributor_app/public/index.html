@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Link Generator</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
+    input, button { padding: 10px; font-size: 1rem; margin-top: 10px; width: 100%; }
+    ul { padding-left: 20px; }
+    li { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h2>🔗 Tạo Link Từ Facebook Comment</h2>
+  <input id="fbUrl" type="text" placeholder="Nhập URL bình luận Facebook..." />
+  <button onclick="generateLinks()">Tạo 10 Link</button>
+  <ul id="linkList"></ul>
+
+  <script>
+    function extractCommentId(fbUrl) {
+      const match = fbUrl.match(/comment_id=(\\d+)/);
+      return match ? match[1] : null;
+    }
+
+    async function generateLinks() {
+      const fbUrl = document.getElementById("fbUrl").value.trim();
+      const commentId = extractCommentId(fbUrl);
+
+      if (!commentId) return alert("URL không hợp lệ hoặc thiếu comment_id");
+
+      const res = await fetch("/api/generate-links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId })
+      });
+
+      const data = await res.json();
+      const list = document.getElementById("linkList");
+      list.innerHTML = "";
+
+      if (data.links) {
+        data.links.forEach(link => {
+          const li = document.createElement("li");
+          li.innerHTML = `<a href="${link}" target="_blank">${link}</a>`;
+          list.appendChild(li);
+        });
+      } else {
+        alert("Lỗi: " + (data.error || "Không rõ lỗi"));
+      }
+    }
+  </script>
+</body>
+</html>
