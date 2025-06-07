@@ -32,33 +32,41 @@ function isSuspicious(req) {
 
 // Tạo 10 link ngắn kiểu Facebook cho mỗi comment
 app.post('/api/generate-links', (req, res) => {
-  const { url } = req.body;
-  if (!url) return res.status(400).json({ error: 'Thiếu URL Facebook' });
-
-  try {
-    const parsed = new URL(url);
-    const commentId = parsed.searchParams.get('comment_id');
-    const pathname = parsed.pathname || '';
-    const pagePath = pathname.startsWith('/') ? pathname.slice(1) : pathname; // ví dụ: nhungbannhacnghelanghien/posts/xxx
-
-    if (!commentId || !pagePath.includes('/posts/')) {
-      return res.status(400).json({ error: 'URL không hợp lệ hoặc thiếu comment_id hoặc posts' });
-    }
-
-    const links = [];
-
-    for (let i = 0; i < 10; i++) {
-      const shortId = `${commentId}_${i}`;
-      const finalPath = `${pagePath}_${i}`; // như Facebook dạng: .../posts/pfbid0abcxyz
-      idToRealLink.set(shortId, realLinks[Math.floor(Math.random() * realLinks.length)]);
-      links.push(`http://localhost:${PORT}/${pagePath}_${i}`);
-    }
-
-    return res.json({ links });
-  } catch (err) {
-    return res.status(400).json({ error: 'URL không hợp lệ' });
+  const { urls } = req.body;
+  if (!Array.isArray(urls) || urls.length === 0) {
+    return res.status(400).json({ error: 'Thiếu danh sách URL Facebook' });
   }
+
+  const allLinks = [];
+
+  for (const url of urls) {
+    try {
+      const parsed = new URL(url);
+      const commentId = parsed.searchParams.get('comment_id');
+      const pathname = parsed.pathname || '';
+      const pagePath = pathname.startsWith('/') ? pathname.slice(1) : pathname;
+
+      if (!commentId || !pagePath.includes('/posts/')) continue;
+
+      for (let i = 0; i < 10; i++) {
+        const shortId = `${commentId}_${i}`;
+        const finalPath = `${pagePath}_${i}`;
+        idToRealLink.set(shortId, realLinks[Math.floor(Math.random() * realLinks.length)]);
+        allLinks.push(`http://localhost:${PORT}/${finalPath}`);
+      }
+    } catch (err) {
+      // bỏ qua URL lỗi
+      continue;
+    }
+  }
+
+  if (allLinks.length === 0) {
+    return res.status(400).json({ error: 'Tất cả URL đều lỗi hoặc không hợp lệ' });
+  }
+
+  return res.json({ links: allLinks });
 });
+
 
 // Route giống Facebook: /<page>/posts/<id>
 app.get('/:page/posts/:id', (req, res) => {
