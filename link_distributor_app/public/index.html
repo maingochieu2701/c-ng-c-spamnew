@@ -13,7 +13,8 @@
 </head>
 <body>
   <h2>🔗 Tạo Link Từ Facebook Comment</h2>
-  <input id="fbUrl" type="text" placeholder="Nhập URL bình luận Facebook..." />
+  <textarea id="fbUrl" rows="10" placeholder="Dán mỗi dòng 1 URL bình luận Facebook..."></textarea>
+
   <button onclick="generateLinks()">Tạo 10 Link</button>
   <button onclick="copyAllLinks()">📋 Sao chép tất cả</button>
 
@@ -29,47 +30,37 @@
   }
 
   async function generateLinks() {
-    const fbUrl = document.getElementById("fbUrl").value.trim();
+  const fbUrls = document.getElementById("fbUrl").value.trim().split('\n').map(s => s.trim()).filter(Boolean);
 
-    if (!fbUrl.includes("comment_id=")) {
-      return alert("URL không hợp lệ hoặc thiếu comment_id");
-    }
-
-    const res = await fetch("/api/generate-links", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: fbUrl })
-    });
-
-    const data = await res.json();
-    const list = document.getElementById("linkList");
-    list.innerHTML = "";
-
-    if (data.links) {
-      data.links.forEach(link => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <a href="${link}" target="_blank">${link}</a>
-          <button onclick="copyToClipboard('${link}')">📋 Sao chép</button>
-        `;
-        list.appendChild(li);
-      });
-    } else {
-      alert("Lỗi: " + (data.error || "Không rõ lỗi"));
-    }
+  if (fbUrls.some(url => !url.includes("comment_id="))) {
+    return alert("Một số URL không hợp lệ hoặc thiếu comment_id");
   }
-  function copyAllLinks() {
-  const links = document.querySelectorAll("#linkList a");
-  if (links.length === 0) return alert("Chưa có link nào để sao chép.");
 
-  const allText = Array.from(links).map(link => link.href).join('\n');
-
-  navigator.clipboard.writeText(allText).then(() => {
-    alert("Đã sao chép tất cả link!");
-  }).catch(err => {
-    alert("Lỗi sao chép: " + err);
+  const res = await fetch("/api/generate-links", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ urls: fbUrls })
   });
+
+  const data = await res.json();
+  const list = document.getElementById("linkList");
+  list.innerHTML = "";
+
+  if (data.links) {
+    data.links.forEach(link => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <a href="${link}" target="_blank">${link}</a>
+        <button onclick="copyToClipboard('${link}')">📋 Sao chép</button>
+      `;
+      list.appendChild(li);
+    });
+  } else {
+    alert("Lỗi: " + (data.error || "Không rõ lỗi"));
+  }
 }
+
+
 
 </script>
 
